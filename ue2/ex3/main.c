@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <time.h>
 
 #define BUFFER_SIZE 1024
 #define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
@@ -11,11 +12,11 @@ FILE * create_log_file(void);
 
 void log_message(char message[]);
 
-int main (int argc, char *argv[]) {
+int main (int argc, char *argv[])
+{
     logFile = create_log_file();
     if (argc < 2) on_error("Usage: %s [port]\n", argv[0]);
     int port = atoi(argv[1]);
-
 
     int server_fd, client_fd, err;
     struct sockaddr_in server, client;
@@ -51,7 +52,7 @@ int main (int argc, char *argv[]) {
             int read = recv(client_fd, buf, BUFFER_SIZE, 0);
             log_message("Someone write to the server");
 
-            if (!read) break; // done reading
+            if (!read) break;
             if (read < 0) on_error("Client read failed\n");
 
             err = send(client_fd, buf, read, 0);
@@ -63,20 +64,31 @@ int main (int argc, char *argv[]) {
     return 0;
 }
 
-void log_message(char message[]) {
-    fprintf(logFile, "%s\n", message);
+void log_message(char message[])
+{
+    char date[26];
+    get_date(date);
+    fprintf(logFile, "%s: %s\n", date, message);
     fflush(logFile);
 }
 
+void get_date(char *buffer)
+{
+    time_t timer;
+    struct tm* tm_info;
+
+    time(&timer);
+    tm_info = localtime(&timer);
+    strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+}
+
 FILE * create_log_file() {
-    FILE *f = fopen("/var/log/ushoutd.log", "w");
+    FILE *f = fopen("/var/log/ushoutd.log", "ab+");
     if (f == NULL)
     {
         printf("Error opening file!\n");
         exit(1);
     }
-    fprintf(f, "Hello i am a log file\n");
-    fflush(f);
     return f;
 }
 
