@@ -1,10 +1,16 @@
+/*
+ *  Basic echo server was taken from here :
+ *  https://github.com/mafintosh/echo-servers.c/blob/master/tcp-echo-server.c
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #define BUFFER_SIZE 1024
+#define LOG_PATH "/var/log/ushoutd.log"
 #define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
 static FILE *logFile;
@@ -38,13 +44,20 @@ int main (int argc, char *argv[])
     err = listen(server_fd, 128);
     if (err < 0) on_error("Could not listen on socket\n");
 
-    printf("Server is listening on that nice %d\n", port);
+    printf("Server is listening on %d\n", port);
 
     while (1) {
         socklen_t client_len = sizeof(client);
         client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len);
 
-        log_message("Someone connected to the server");
+        char *hello_world = (char*)malloc(130 * sizeof(char));
+        sprintf(
+                hello_world,
+                "Someone connected with internet address %d connected to the server"
+                , client.sin_addr);
+
+
+        log_message(hello_world);
 
         if (client_fd < 0) on_error("Could not establish new connection\n");
 
@@ -83,7 +96,8 @@ void get_date(char *buffer)
 }
 
 FILE * create_log_file() {
-    FILE *f = fopen("/var/log/ushoutd.log", "ab+");
+    FILE *f = fopen(LOG_PATH, "ab+");
+    chmod(LOG_PATH, S_IRWXU);
     if (f == NULL)
     {
         printf("Error opening file!\n");
