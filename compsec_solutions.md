@@ -2,6 +2,8 @@
 
 Jakob Krause, Master Informatik, 4573260
 Ramdane Sennoun, Master Informatik, 4304440
+## Papers
+[OMEN: Faster Password Guessing Using an Ordered Markov Enumerator](https://hal.inria.fr/hal-01112124/document)
 
 ## Assignment 2
 
