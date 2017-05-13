@@ -2,12 +2,14 @@
  *  Basic echo server was taken from here :
  *  https://github.com/mafintosh/echo-servers.c/blob/master/tcp-echo-server.c
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #define BUFFER_SIZE 1024
 #define LOG_PATH "/var/log/ushoutd.log"
@@ -16,7 +18,8 @@
 static FILE *logFile;
 FILE * create_log_file(void);
 
-void log_message(char message[]);
+void log_to_file(char *message);
+void get_date(char *buffer);
 
 int main (int argc, char *argv[])
 {
@@ -46,24 +49,35 @@ int main (int argc, char *argv[])
 
     printf("Server is listening on %d\n", port);
 
+    char *log_connect = (char*)malloc(130 * sizeof(char));
+    char *log_message = (char*)malloc((BUFFER_SIZE + 130) * sizeof(char));
+
     while (1) {
         socklen_t client_len = sizeof(client);
         client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len);
 
-        char *hello_world = (char*)malloc(130 * sizeof(char));
-        sprintf(
-                hello_world,
-                "Someone connected with internet address %d connected to the server"
-                , client.sin_addr);
+        snprintf(
+                log_connect,
+                300,
+                "User with ip address %s connected to the server",
+                inet_ntoa(client.sin_addr)
+        );
 
-
-        log_message(hello_world);
+        log_to_file(log_connect);
 
         if (client_fd < 0) on_error("Could not establish new connection\n");
 
         while (1) {
             int read = recv(client_fd, buf, BUFFER_SIZE, 0);
-            log_message("Someone write to the server");
+            snprintf(
+                    log_message,
+                    BUFFER_SIZE + 100,
+                    "%s send message: %s",
+                    inet_ntoa(client.sin_addr),
+                    buf
+            );
+
+            log_to_file(log_message);
 
             if (!read) break;
             if (read < 0) on_error("Client read failed\n");
@@ -77,7 +91,7 @@ int main (int argc, char *argv[])
     return 0;
 }
 
-void log_message(char message[])
+void log_to_file(char *message)
 {
     char date[26];
     get_date(date);
