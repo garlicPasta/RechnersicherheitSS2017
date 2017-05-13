@@ -2,8 +2,21 @@
 
 Jakob Krause, Master Informatik, 4573260
 Ramdane Sennoun, Master Informatik, 4304440
+
+
 ## Papers
-[OMEN: Faster Password Guessing Using an Ordered Markov Enumerator](https://hal.inria.fr/hal-01112124/document)
+- [OMEN: Faster Password Guessing Using an Ordered Markov Enumerator](https://hal.inria.fr/hal-01112124/document)
+
+
+### Assignment 3
+
+#### Exercise 5 (Markov-Generator (5 Points)).
+
+#### Exercise 6 (Bad Password Practice (1+2 Points)).
+
+#### Exercise 7 (Randomized Response (2+1 Points)).
+
+#### Exercise 8 (Keeping your systems secure (Bonus: 1 Points)).
 
 ## Assignment 2
 
