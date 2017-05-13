@@ -14,6 +14,12 @@ Ramdane Sennoun, Master Informatik, 4304440
 
 #### Exercise 6 (Bad Password Practice (1+2 Points)).
 
+##### 6.1 Solution (Password popularity: 701-800)
+![Crossword Solution](img/6_1_crossword_solution.png)
+
+##### 6.2 What did Adobe do wrong?
+
+
 #### Exercise 7 (Randomized Response (2+1 Points)).
 
 #### Exercise 8 (Keeping your systems secure (Bonus: 1 Points)).
