@@ -24,6 +24,58 @@ Ramdane Sennoun, Master Informatik, 4304440
 
 #### Exercise 8 (Keeping your systems secure (Bonus: 1 Points)).
 
+##### Debian
+Since April 29th, 11.59pm there were 13 debian security announcemenets as of this writing.
+
+- [SECURITY] [DSA 3840-1] mysql-connector-java Moritz Muehlenhoff
+- [SECURITY] [DSA 3841-1] libxstream-java Moritz Muehlenhoff
+- [SECURITY] [DSA 3842-1] tomcat7 security update Sebastien Delafond
+- [SECURITY] [DSA 3843-1] tomcat8 security update Sebastien Delafond
+- [SECURITY] [DSA 3844-1] tiff security update Moritz Muehlenhoff
+- [SECURITY] [DSA 3845-1] libtirpc security update Moritz Muehlenhoff
+- [SECURITY] [DSA 3846-1] libytnef security update Sebastien Delafond
+- [SECURITY] [DSA 3847-1] xen security update Moritz Muehlenhoff
+- [SECURITY] [DSA 3848-1] git security update Salvatore Bonaccorso
+- [SECURITY] [DSA 3849-1] kde4libs security update Salvatore Bonaccorso
+- [SECURITY] [DSA 3850-1] rtmpdump security update Moritz Muehlenhoff
+- [SECURITY] [DSA 3851-1] postgresql-9.4 security update Moritz Muehlenhoff
+- [SECURITY] [DSA 3852-1] squirrelmail security update Sebastien Delafond
+
+The list was extracted from [https://lists.debian.org/debian-security-announce/2017/threads.html](https://lists.debian.org/debian-security-announce/2017/threads.html)
+
+###### [SECURITY] [DSA 3848-1] git security update
+The Git git-shell, a restricted login shell for Git-only SSH access, allows a user to run an interactive pager by causing it to spawn `git upload-pack --help`.
+
+They recommend to upgrade the git packages.
+
+##### OpenBSD
+
+Since April 29th, 11.59pm there were 7 OpenBSD 6.1 security announcemenets as of this writing.
+
+- 001: INTEROPERABILITY FIX: May 2, 2017   All architectures 
+dhcpd unconditionally echoed the client identifier, preventing some devices from acquiring a lease. 
+A source code patch exists which remedies this problem.
+- 002: SECURITY FIX: May 2, 2017   amd64 
+vmm mismanaged floating point contexts. 
+A source code patch exists which remedies this problem.
+- 003: SECURITY FIX: May 2, 2017   All architectures 
+A consistency check error could cause programs to incorrectly verify TLS certificates when using callbacks that always return 1. 
+A source code patch exists which remedies this problem.
+- 004: RELIABILITY FIX: May 2, 2017   All architectures 
+softraid was unable to create usable concat volumes because it always set the size of the volume to zero sectors. 
+A source code patch exists which remedies this problem.
+- 005: RELIABILITY FIX: May 6, 2017   All architectures 
+Expired pf source tracking entries never got removed, leading to memory exhaustion. 
+A source code patch exists which remedies this problem.
+- 006: RELIABILITY FIX: May 8, 2017   All architectures 
+Incorrect DTLS cookie handling can result in a NULL pointer dereference. 
+A source code patch exists which remedies this problem.
+- 007: SECURITY FIX: May 13, 2017   All architectures 
+Heap-based buffer overflows in freetype can result in out-of-bounds writes. 
+A source code patch exists which remedies this problem.
+
+The list was extracted from [https://www.openbsd.org/errata61.html](https://www.openbsd.org/errata61.html)
+
 ## Assignment 2
 
 ### Exercise 3 (Case study μ-shout (I): a small echo server (6 Points)).
