@@ -35,6 +35,7 @@
 
 #### 6.2 What did Adobe do wrong?
 
+Adobe used 3DES, a block cipher, in ECB mode to encrypt the passwords. Therefore they made it easier for bruteforce methods because it is a fast encryption method. Their chose method requires a cipher password that needs to be in the system all the time. Therefor, if that cipher password gets published somehow, all the passwords can be revealed. It also gives information about the password length. 
 
 ### Exercise 7 (Randomized Response (2+1 Points)).
 
