@@ -41,9 +41,6 @@ void load_users(){
     size_t len = 0;
     ssize_t read;
 
-    printf("Load_users called!");
-
-
     fp = fopen(PASS_PATH, "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
@@ -98,6 +95,9 @@ int main (int argc, char *argv[])
 
     printf("Server is listening on %d\n", port);
 
+
+
+
     char *log_connect = (char*)malloc(130 * sizeof(char));
     char *log_message = (char*)malloc((BUFFER_SIZE + 130) * sizeof(char));
 
@@ -115,6 +115,25 @@ int main (int argc, char *argv[])
         log_to_file(log_connect);
 
         if (client_fd < 0) on_error("Could not establish new connection\n");
+
+        // 1. prompt username
+
+        // 1.1 send via socket
+        err = send(client_fd, "Username: ", BUFFER_SIZE, 0);
+        if (err < 0) on_error("Username prompt failed\n");
+ 
+
+        // 1.2 receive input
+
+
+
+
+        // 2. prompt password
+
+        // 3. check is user with password exists in user_list
+
+        // 4. exit if it doesn't exist
+
 
         while (1) {
             int read = recv(client_fd, buf, BUFFER_SIZE, 0);
