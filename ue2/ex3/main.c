@@ -1,8 +1,3 @@
-/*
- *  Basic echo server was taken from here :
- *  https://github.com/mafintosh/echo-servers.c/blob/master/tcp-echo-server.c
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -10,9 +5,11 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <memory.h>
 
 #define BUFFER_SIZE 1024
 #define LOG_PATH "/var/log/ushoutd.log"
+#define PASS_PATH "/etc/ushoutd.passwd"
 #define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
 static FILE *logFile;
@@ -21,9 +18,29 @@ FILE * create_log_file(void);
 void log_to_file(char *message);
 void get_date(char *buffer);
 
+typedef struct
+{
+    char *username;
+    char *password;
+} user;
+
+user *createUser(char *username, char *password) {
+
+    user *user = malloc(sizeof(user));
+
+    user->username = strdup(username);
+    user->password = strdup(password);
+    return user;
+}
+
+static user *user_list[1];
+
 int main (int argc, char *argv[])
 {
     logFile = create_log_file();
+    load_users();
+    printf("%s: %s", user_list[0]->username, user_list[0]->password);
+
     if (argc < 2) on_error("Usage: %s [port]\n", argv[0]);
     int port = atoi(argv[1]);
 
@@ -118,5 +135,37 @@ FILE * create_log_file() {
         exit(1);
     }
     return f;
+}
+
+void load_users(){
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    printf("Load_users called!");
+
+
+    fp = fopen(PASS_PATH, "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+        printf("Retrieved line of length %zu :\n", read);
+        printf("%s", line);
+        char *token;
+        char *user_data[2];
+        int i = 0;
+        while ((token = strsep(&line, ":"))) {
+            user_data[i++] = token;
+        }
+        user *u = createUser(user_data[0], user_data[1]);
+        user_list[0] = u;
+    }
+
+    fclose(fp);
+    if (line)
+        free(line);
+
 }
 
