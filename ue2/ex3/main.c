@@ -35,6 +35,38 @@ user *createUser(char *username, char *password) {
 
 static user *user_list[1];
 
+void load_users(){
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    printf("Load_users called!");
+
+
+    fp = fopen(PASS_PATH, "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+        printf("Retrieved line of length %zu :\n", read);
+        printf("%s", line);
+        char *token;
+        char *user_data[2];
+        int i = 0;
+        while ((token = strsep(&line, ":"))) {
+            user_data[i++] = token;
+        }
+        user *u = createUser(user_data[0], user_data[1]);
+        user_list[0] = u;
+    }
+
+    fclose(fp);
+    if (line)
+        free(line);
+
+}
+
 int main (int argc, char *argv[])
 {
     logFile = create_log_file();
@@ -136,36 +168,3 @@ FILE * create_log_file() {
     }
     return f;
 }
-
-void load_users(){
-    FILE * fp;
-    char * line = NULL;
-    size_t len = 0;
-    ssize_t read;
-
-    printf("Load_users called!");
-
-
-    fp = fopen(PASS_PATH, "r");
-    if (fp == NULL)
-        exit(EXIT_FAILURE);
-
-    while ((read = getline(&line, &len, fp)) != -1) {
-        printf("Retrieved line of length %zu :\n", read);
-        printf("%s", line);
-        char *token;
-        char *user_data[2];
-        int i = 0;
-        while ((token = strsep(&line, ":"))) {
-            user_data[i++] = token;
-        }
-        user *u = createUser(user_data[0], user_data[1]);
-        user_list[0] = u;
-    }
-
-    fclose(fp);
-    if (line)
-        free(line);
-
-}
-
