@@ -10,6 +10,7 @@
 - [OMEN: Faster Password Guessing Using an Ordered Markov Enumerator](https://hal.inria.fr/hal-01112124/document)
 - [Martin Hellman: A cryptoanalytic time-memory trade-off)](http://www.karlin.mff.cuni.cz/~hojsik/ku/papers/Hellman_ACryptanalyticTime-MemoryTradeoff_1980.pdf)
 - [Philippe Cechslim: Making a faster cryptoanalytic time-memory trade-off](http://pages.csam.montclair.edu/~perrieror/projects/CMPT495-clustering.and.security/resources/philippe.oechslin-making.a.faster.cryptanalytical.time.memory.trade.off.pdf)
+- [Narayanan, Shmatrikov: Fast dictionary attacks on passwords using time-memory-trade-off]()
 
 
 ## Assignment 3
