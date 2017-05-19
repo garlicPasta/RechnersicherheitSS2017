@@ -95,9 +95,6 @@ int main (int argc, char *argv[])
 
     printf("Server is listening on %d\n", port);
 
-
-
-
     char *log_connect = (char*)malloc(130 * sizeof(char));
     char *log_message = (char*)malloc((BUFFER_SIZE + 130) * sizeof(char));
 
@@ -121,11 +118,14 @@ int main (int argc, char *argv[])
         // 1.1 send via socket
         err = send(client_fd, "Username: ", BUFFER_SIZE, 0);
         if (err < 0) on_error("Username prompt failed\n");
- 
 
         // 1.2 receive input
+        int readUsername = recv(client_fd, buf, BUFFER_SIZE, 0);
+        if (!readUsername) break;
+        if (readUsername < 0) on_error("Couldn't read username\n");
 
 
+        // 1.3 check if username exists in list
 
 
         // 2. prompt password
