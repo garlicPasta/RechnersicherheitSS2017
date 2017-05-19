@@ -110,13 +110,17 @@ int main (int argc, char *argv[])
         );
 
         log_to_file(log_connect);
+        printf("%s", log_connect);
 
         if (client_fd < 0) on_error("Could not establish new connection\n");
 
         // 1. prompt username
 
         // 1.1 send via socket
-        err = send(client_fd, "Username: ", BUFFER_SIZE, 0);
+
+        char username[BUFFER_SIZE] = "username";
+
+        err = send(client_fd, username, BUFFER_SIZE, 0);
         if (err < 0) on_error("Username prompt failed\n");
 
         // 1.2 receive input
