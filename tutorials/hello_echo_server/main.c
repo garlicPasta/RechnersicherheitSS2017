@@ -40,6 +40,28 @@ int main() {
   */
   bind(listen_fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
+  /*
+    Start Listening for connections , keep at the most 10 connection
+    requests waiting.If there are more than 10 computers wanting to
+    connect at a time, the 11th one fails to.
+  */
+  listen(listen_fd, 10);
+
+  /*
+    Accept a connection from any device who is willing to connect,
+    If there is no one who wants to connect , wait. A file descriptor
+    is returned. This can finally be used to communicate , whatever is
+    sent by the device accepted can be read from comm_fd, whatever is
+    written to comm_fd is sent to the other device.
+  */
+  comm_fd = accept(listen_fd, (struct sockaddr*) NULL, NULL);
+
+  while(1) {
+    bzero( str, 100);
+    read(comm_fd,str,100);
+    printf("Echoing back - %s",str);
+    write(comm_fd, str, strlen(str)+1);
+  }
 
   return 1;
 }
