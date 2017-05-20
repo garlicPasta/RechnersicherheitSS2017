@@ -9,10 +9,8 @@
 #include <pthread.h>
 
 #define BUFFER_SIZE 1024
-//#define LOG_PATH "/var/log/ushoutd.log"
-//#define PASS_PATH "/etc/ushoutd.passwd"
-#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ex3/ushoutd.log"
-#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ex3/ushoutd.passwd"
+#define LOG_PATH "/var/log/ushoutd.log"
+#define PASS_PATH "/etc/ushoutd.passwd"
 #define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
 static FILE *logFile;
@@ -32,7 +30,6 @@ typedef struct {
 void log_to_file(char *message);
 void get_date(char *buffer);
 void handle_request(thread_args);
-
 
 user *createUser(char *username, char *password) {
 
@@ -56,8 +53,6 @@ void load_users(){
         exit(EXIT_FAILURE);
 
     while ((read = getline(&line, &len, fp)) != -1) {
-        printf("Retrieved line of length %zu :\n", read);
-        printf("%s", line);
         char *token;
         char *user_data[2];
         int i = 0;
@@ -75,7 +70,7 @@ void load_users(){
 }
 
 int check_credentials(char *username, char *password) {
-  
+
   for (int i = 0; i < sizeof(user_list); i++) {
     user *u = user_list[i];
 
@@ -84,20 +79,20 @@ int check_credentials(char *username, char *password) {
     }
   }
 
-  return 0;
+  return -1;
 }
 
 int main (int argc, char *argv[])
 {
     logFile = create_log_file();
     load_users();
-    printf("%s: %s", user_list[0]->username, user_list[0]->password);
 
     if (argc < 2) on_error("Usage: %s [port]\n", argv[0]);
     int port = atoi(argv[1]);
 
     int server_fd, client_fd, err;
     struct sockaddr_in server, client;
+    char buf[BUFFER_SIZE];
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) on_error("Could not create socket\n");
@@ -116,29 +111,13 @@ int main (int argc, char *argv[])
     if (err < 0) on_error("Could not listen on socket\n");
 
     printf("Server is listening on %d\n", port);
+    puts("Waiting for incoming connections...");
 
     char *log_connect = (char*)malloc(130 * sizeof(char));
+    char *log_message = (char*)malloc((BUFFER_SIZE + 130) * sizeof(char));
 
-    while (1) {
-        socklen_t client_len = sizeof(client);
-        client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len);
-
-         pthread_t sniffer_thread;
-
-         // Copy the value of the accepted socket, in order to pass to the thread
-         int *new_sock = malloc(4);
-         new_sock = client_fd;
-
-
-        thread_args *args = malloc(sizeof(thread_args));
-        args->client = client;
-        args->socket_addr = client_fd;
-         if( pthread_create( &sniffer_thread, NULL, handle_request, args ) < 0) {
-           on_error("could not create thread");
-         }
-
-         pthread_join( sniffer_thread , NULL);
-         puts("Handler assigned");
+    socklen_t client_len = sizeof(struct sockaddr_in);
+    while ( (client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len)) ) {
 
         snprintf(
                 log_connect,
@@ -149,8 +128,58 @@ int main (int argc, char *argv[])
 
         log_to_file(log_connect);
 
-        if (client_fd < 0) on_error("Could not establish new connection\n");
+        char user_prompt_username[BUFFER_SIZE] = "\nUsername: ";
 
+        if ((send(client_fd, user_prompt_username, BUFFER_SIZE, 0)) < 0) {
+            on_error("Username prompt failed\n");
+        }
+
+        memset(user_prompt_username, 0, BUFFER_SIZE) ;
+
+        if ((recv(client_fd, user_prompt_username, BUFFER_SIZE, 0)) < 0) {
+            on_error("Couldn't read username\n");
+        }
+        user_prompt_username[strlen(user_prompt_username) - 1] = 0;
+
+        printf("\n%s", user_prompt_username);
+
+        char user_prompt_password[BUFFER_SIZE] = "\nPassword: ";
+
+        if ((send(client_fd, user_prompt_password, BUFFER_SIZE, 0)) < 0) {
+            on_error("Password prompt failed\n");
+        }
+
+        memset(user_prompt_password, 0, BUFFER_SIZE);
+
+        if ((recv(client_fd, user_prompt_password, BUFFER_SIZE, 0)) < 0) {
+            on_error("Couldn't read password\n");
+        }
+        user_prompt_password[strlen(user_prompt_password) -1] = 0;
+
+        printf("\n%s", user_prompt_password);
+
+        if (check_credentials(user_prompt_username, user_prompt_password) < 0) {
+            on_error("Couldn't find user.\n");
+        };
+
+        while (1) {
+            int read = recv(client_fd, buf, BUFFER_SIZE, 0);
+            snprintf(
+                    log_message,
+                    BUFFER_SIZE + 100,
+                    "%s send message: %s",
+                    inet_ntoa(client.sin_addr),
+                    buf
+            );
+
+            log_to_file(log_message);
+
+            if (!read) break;
+            if (read < 0) on_error("Client read failed\n");
+
+            err = send(client_fd, buf, read, 0);
+            if (err < 0) on_error("Client write failed\n");
+        }
     }
 
     fclose(logFile);
