@@ -144,6 +144,7 @@ int main (int argc, char *argv[])
         // 1. prompt username
         char userPromptUsername[BUFFER_SIZE] = "\nUsername: ";
 
+<<<<<<< Updated upstream
         err = send(client_fd, userPromptUsername, BUFFER_SIZE, 0);
         if (err < 0) on_error("Username prompt failed\n");
 
