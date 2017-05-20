@@ -11,7 +11,7 @@
 #define BUFFER_SIZE 1024
 #define LOG_PATH "/var/log/ushoutd.log"
 #define PASS_PATH "/etc/ushoutd.passwd"
-#define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
+#define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
 static FILE *logFile;
 FILE * create_log_file(void);
@@ -90,7 +90,7 @@ int main (int argc, char *argv[])
     if (argc < 2) on_error("Usage: %s [port]\n", argv[0]);
     int port = atoi(argv[1]);
 
-    int server_fd, client_fd, err;
+    int server_fd, client_fd, *new_sock;
     struct sockaddr_in server, client;
     char buf[BUFFER_SIZE];
 
@@ -104,11 +104,14 @@ int main (int argc, char *argv[])
     int opt_val = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof opt_val);
 
-    err = bind(server_fd, (struct sockaddr *) &server, sizeof(server));
-    if (err < 0) on_error("Could not bind socket\n");
+    if ((bind(server_fd, (struct sockaddr *) &server, sizeof(server))) < 0) {
+        on_error("Could not bind socket\n");
+    }
 
-    err = listen(server_fd, 128);
-    if (err < 0) on_error("Could not listen on socket\n");
+    // Listen
+    if ((listen(server_fd, 20)) < 0) {
+        on_error("Could not listen on socket\n");
+    }
 
     printf("Server is listening on %d\n", port);
     puts("Waiting for incoming connections...");
@@ -118,6 +121,11 @@ int main (int argc, char *argv[])
 
     socklen_t client_len = sizeof(struct sockaddr_in);
     while ( (client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len)) ) {
+        puts("Connection accepted");
+
+        pthread_t sniffer_thread;
+        new_sock = malloc(1);
+        *new_sock = client_fd;
 
         snprintf(
                 log_connect,
@@ -133,8 +141,6 @@ int main (int argc, char *argv[])
         if ((send(client_fd, user_prompt_username, BUFFER_SIZE, 0)) < 0) {
             on_error("Username prompt failed\n");
         }
-
-        memset(user_prompt_username, 0, BUFFER_SIZE) ;
 
         if ((recv(client_fd, user_prompt_username, BUFFER_SIZE, 0)) < 0) {
             on_error("Couldn't read username\n");
@@ -160,10 +166,14 @@ int main (int argc, char *argv[])
 
         if (check_credentials(user_prompt_username, user_prompt_password) < 0) {
             on_error("Couldn't find user.\n");
-        };
+        }
 
         while (1) {
             int read = recv(client_fd, buf, BUFFER_SIZE, 0);
+            if (read < 0) {
+                on_error("Client read failed\n");
+            }
+
             snprintf(
                     log_message,
                     BUFFER_SIZE + 100,
@@ -174,12 +184,14 @@ int main (int argc, char *argv[])
 
             log_to_file(log_message);
 
-            if (!read) break;
-            if (read < 0) on_error("Client read failed\n");
-
-            err = send(client_fd, buf, read, 0);
-            if (err < 0) on_error("Client write failed\n");
+            if ((send(client_fd, buf, read, 0)) < 0) {
+              on_error("Client write failed\n");
+            }
         }
+    }
+
+    if (client_fd < 0) {
+        on_error("Connecting client failed.");
     }
 
     fclose(logFile);
