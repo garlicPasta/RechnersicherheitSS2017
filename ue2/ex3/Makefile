@@ -1,2 +1,2 @@
-CC=gcc
+CC=gcc -pthread
 all: main
