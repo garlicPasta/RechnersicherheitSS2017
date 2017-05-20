@@ -64,6 +64,19 @@ void load_users(){
 
 }
 
+int lookupUser(char username[], char password[]) {
+  
+  for (int i = 0; i < sizeof(user_list); i++) {
+    user *u = user_list[i];
+
+    if (username == u->username && password == u->password) {
+      return 1;
+    }
+  }
+
+  return -1;
+}
+
 int main (int argc, char *argv[])
 {
     logFile = create_log_file();
@@ -102,6 +115,21 @@ int main (int argc, char *argv[])
         socklen_t client_len = sizeof(client);
         client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len);
 
+        // pthread_t sniffer_thread;
+        //
+        // // Copy the value of the accepted socket, in order to pass to the thread
+        // int new_sock = malloc(sizeof(client_fd));
+        // new_sock = client_fd;
+        //
+        //
+        // if( pthread_create( &sniffer_thread, NULL, NULL, new_sock) < 0) {
+        //   on_error("could not create thread");
+        // }
+        //
+        // Now join the thread , so that we dont terminate before the thread
+        // pthread_join( sniffer_thread , NULL);
+        // puts("Handler assigned");
+
         snprintf(
                 log_connect,
                 300,
@@ -110,33 +138,39 @@ int main (int argc, char *argv[])
         );
 
         log_to_file(log_connect);
-        printf("%s", log_connect);
 
         if (client_fd < 0) on_error("Could not establish new connection\n");
 
         // 1. prompt username
+        char userPromptUsername[BUFFER_SIZE] = "\nUsername: ";
 
-        // 1.1 send via socket
-
-        char username[BUFFER_SIZE] = "username";
-
-        err = send(client_fd, username, BUFFER_SIZE, 0);
+        err = send(client_fd, userPromptUsername, BUFFER_SIZE, 0);
         if (err < 0) on_error("Username prompt failed\n");
 
-        // 1.2 receive input
-        int readUsername = recv(client_fd, buf, BUFFER_SIZE, 0);
+
+        int readUsername = recv(client_fd, userPromptUsername, BUFFER_SIZE, 0);
         if (!readUsername) break;
         if (readUsername < 0) on_error("Couldn't read username\n");
 
-
-        // 1.3 check if username exists in list
-
+        printf("\n%s", userPromptUsername);
 
         // 2. prompt password
 
-        // 3. check is user with password exists in user_list
+        // 2.1 send via socket
+        char userPromptPassword[BUFFER_SIZE] = "\nPassword: ";
 
-        // 4. exit if it doesn't exist
+        err = send(client_fd, userPromptPassword, BUFFER_SIZE, 0);
+        if (err < 0) on_error("Password prompt failed\n");
+
+        int readPassword = recv(client_fd, userPromptPassword, BUFFER_SIZE, 0);
+        if (!readPassword) break;
+        if (readPassword < 0) on_error("Couldn't read password\n");
+
+        printf("\n%s", userPromptPassword);
+
+        // 3. check is user with password exists in user_list
+        err = lookupUser(userPromptUsername, userPromptPassword);
+        if (err < 0) on_error("Couldn't find user.\n");
 
 
         while (1) {
