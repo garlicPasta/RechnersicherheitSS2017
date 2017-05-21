@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <memory.h>
 #include <pthread.h>
+#include <unistd.h>    //write
 
 #define BUFFER_SIZE 1024
 #define LOG_PATH "/var/log/ushoutd.log"
@@ -16,20 +17,14 @@
 static FILE *logFile;
 FILE * create_log_file(void);
 
-typedef struct
-{
+typedef struct {
     char *username;
     char *password;
 } user;
 
-typedef struct {
-    int socket_addr;
-    struct sockaddr_in client;
-} thread_args;
-
 void log_to_file(char *message);
 void get_date(char *buffer);
-void handle_request(thread_args);
+void *handle_request(void *);
 
 user *createUser(char *username, char *password) {
 
@@ -92,7 +87,6 @@ int main (int argc, char *argv[])
 
     int server_fd, client_fd, *new_sock;
     struct sockaddr_in server, client;
-    char buf[BUFFER_SIZE];
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) on_error("Could not create socket\n");
@@ -105,7 +99,7 @@ int main (int argc, char *argv[])
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof opt_val);
 
     if ((bind(server_fd, (struct sockaddr *) &server, sizeof(server))) < 0) {
-        on_error("Could not bind socket\n");
+        on_error("Could not bind socket. Check if port is available.\n");
     }
 
     // Listen
@@ -127,6 +121,10 @@ int main (int argc, char *argv[])
         new_sock = malloc(1);
         *new_sock = client_fd;
 
+        if (pthread_create( &sniffer_thread , NULL ,  handle_request , (void*) new_sock) < 0) {
+            on_error("could not create thread");
+        }
+
         snprintf(
                 log_connect,
                 300,
@@ -136,58 +134,56 @@ int main (int argc, char *argv[])
 
         log_to_file(log_connect);
 
-        char user_prompt_username[BUFFER_SIZE] = "\nUsername: ";
-
-        if ((send(client_fd, user_prompt_username, BUFFER_SIZE, 0)) < 0) {
-            on_error("Username prompt failed\n");
-        }
-
-        if ((recv(client_fd, user_prompt_username, BUFFER_SIZE, 0)) < 0) {
-            on_error("Couldn't read username\n");
-        }
-        user_prompt_username[strlen(user_prompt_username) - 1] = 0;
-
-        printf("\n%s", user_prompt_username);
-
-        char user_prompt_password[BUFFER_SIZE] = "\nPassword: ";
-
-        if ((send(client_fd, user_prompt_password, BUFFER_SIZE, 0)) < 0) {
-            on_error("Password prompt failed\n");
-        }
-
-        memset(user_prompt_password, 0, BUFFER_SIZE);
-
-        if ((recv(client_fd, user_prompt_password, BUFFER_SIZE, 0)) < 0) {
-            on_error("Couldn't read password\n");
-        }
-        user_prompt_password[strlen(user_prompt_password) -1] = 0;
-
-        printf("\n%s", user_prompt_password);
-
-        if (check_credentials(user_prompt_username, user_prompt_password) < 0) {
-            on_error("Couldn't find user.\n");
-        }
-
-        while (1) {
-            int read = recv(client_fd, buf, BUFFER_SIZE, 0);
-            if (read < 0) {
-                on_error("Client read failed\n");
-            }
-
-            snprintf(
-                    log_message,
-                    BUFFER_SIZE + 100,
-                    "%s send message: %s",
-                    inet_ntoa(client.sin_addr),
-                    buf
-            );
-
-            log_to_file(log_message);
-
-            if ((send(client_fd, buf, read, 0)) < 0) {
-              on_error("Client write failed\n");
-            }
-        }
+        //
+        // char *message , client_message[2000], username[2000], password[2000];
+        //
+        // message = "Type username:\n";
+        // write(client_fd , message , strlen(message));
+        //
+        // memset(username, 0, BUFFER_SIZE);
+        // if ((recv(client_fd, username, BUFFER_SIZE, 0)) < 0) {
+        //     on_error("Couldn't read username\n");
+        // }
+        // username[strlen(username) - 1] = 0;
+        //
+        // printf("\n%s", username);
+        //
+        // message = "Type password:\n";
+        // write(client_fd , message , strlen(message));
+        //
+        // memset(password, 0, BUFFER_SIZE);
+        //
+        // if ((recv(client_fd, password, BUFFER_SIZE, 0)) < 0) {
+        //     on_error("Couldn't read password\n");
+        // }
+        // password[strlen(password) -1] = 0;
+        //
+        // printf("\n%s", password);
+        //
+        // if (check_credentials(username, password) < 0) {
+        //     break;
+        // }
+        //
+        // while (1) {
+        //     int read_size = recv(client_fd, client_message, BUFFER_SIZE, 0);
+        //     if (read_size < 0) {
+        //         on_error("Client read failed\n");
+        //     }
+        //
+        //     snprintf(
+        //             log_message,
+        //             BUFFER_SIZE + 100,
+        //             "%s send message: %s",
+        //             inet_ntoa(client.sin_addr),
+        //             client_message
+        //     );
+        //
+        //     log_to_file(log_message);
+        //
+        //     if ((send(client_fd, client_message, read_size, 0)) < 0) {
+        //       on_error("Client write failed\n");
+        //     }
+        // }
     }
 
     if (client_fd < 0) {
@@ -227,57 +223,66 @@ FILE * create_log_file() {
     return f;
 }
 
-void handle_request(thread_args args){
-    char *log_message = (char*)malloc((BUFFER_SIZE + 130) * sizeof(char));
-    int err;
-    char buf[BUFFER_SIZE];
-    char user_prompt_username[BUFFER_SIZE] = "\nUsername: ";
-    int client_fd = args.socket_addr;
+void *handle_request(void *server_fd) {
 
+    //Get the socket descriptor
+    int client_fd = *(int*)server_fd;
+    int read_size;
+    char *message , client_message[2000], username[2000], password[2000];
 
-    err = send(client_fd, user_prompt_username, BUFFER_SIZE, 0);
-    if (err < 0) on_error("Username prompt failed\n");
+    message = "Type username:\n";
+    write(client_fd , message , strlen(message));
 
-    memset(user_prompt_username, 0, BUFFER_SIZE) ;
+    memset(username, 0, BUFFER_SIZE);
+    if ((recv(client_fd, username, BUFFER_SIZE, 0)) < 0) {
+        on_error("Couldn't read username\n");
+    }
+    username[strlen(username) - 1] = 0;
 
-    int username_length = recv(client_fd, user_prompt_username, BUFFER_SIZE, 0);
-    if (username_length < 0) on_error("Couldn't read username\n");
-    user_prompt_username[strlen(user_prompt_username) - 1] = 0;
+    printf("\n%s", username);
 
-    printf("\n%s", user_prompt_username);
+    message = "Type password:\n";
+    write(client_fd , message , strlen(message));
 
-    char user_prompt_password[BUFFER_SIZE] = "\nPassword: ";
+    memset(password, 0, BUFFER_SIZE);
 
-    err = send(client_fd, user_prompt_password, BUFFER_SIZE, 0);
-    if (err < 0) on_error("Password prompt failed\n");
+    if ((recv(client_fd, password, BUFFER_SIZE, 0)) < 0) {
+        on_error("Couldn't read password\n");
+    }
+    password[strlen(password) -1] = 0;
 
-    memset(user_prompt_password, 0, BUFFER_SIZE);
-    int password_length = recv(client_fd, user_prompt_password, BUFFER_SIZE, 0);
-    if (password_length < 0) on_error("Couldn't read password\n");
-    user_prompt_password[strlen(user_prompt_password) -1] = 0;
+    printf("\n%s", password);
 
-    printf("\n%s", user_prompt_password);
-
-    err = check_credentials(user_prompt_username, user_prompt_password);
-    if (err < 0) on_error("Couldn't find user.\n");
-
-    while (1) {
-        int read = recv(client_fd, buf, BUFFER_SIZE, 0);
-        snprintf(
-                log_message,
-                BUFFER_SIZE + 100,
-                "%s send message: %s",
-                inet_ntoa(args.client.sin_addr),
-                buf
-        );
-
-        log_to_file(log_message);
-
-        if (!read) break;
-        if (read < 0) on_error("Client read failed\n");
-
-        err = send(client_fd, buf, read, 0);
-        if (err < 0) on_error("Client write failed\n");
+    if (check_credentials(username, password) < 0) {
+        printf("Credentials wrong.");
     }
 
+    //Receive a message from client
+    while( (read_size = recv(client_fd , client_message , 2000 , 0)) > 0 ) {
+
+      // snprintf(
+      //         log_message,
+      //         BUFFER_SIZE + 100,
+      //         "%s send message: %s",
+      //         inet_ntoa(client.sin_addr),
+      //         client_message
+      // );
+
+      // log_to_file(log_message);
+
+        //Send the message back to client
+        write(client_fd , client_message , strlen(client_message));
+    }
+
+    if (read_size == 0) {
+        puts("Client disconnected");
+        fflush(stdout);
+    } else if (read_size == -1) {
+        perror("recv failed");
+    }
+
+    //Free the socket pointer
+    free(server_fd);
+
+    return 0;
 }
