@@ -10,6 +10,7 @@
 #include <unistd.h>    //write
 
 #define BUFFER_SIZE 1024
+#define CONCURRENT_CLIENT_COUNT_MAX 20
 #define LOG_PATH "/var/log/ushoutd.log"
 #define PASS_PATH "/etc/ushoutd.passwd"
 #define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
@@ -36,6 +37,7 @@ user *createUser(char *username, char *password) {
 }
 
 static user *user_list[1];
+static int clients[CONCURRENT_CLIENT_COUNT_MAX];
 
 void load_users(){
     FILE * fp;
@@ -66,7 +68,9 @@ void load_users(){
 
 int check_credentials(char *username, char *password) {
 
-  for (int i = 0; i < sizeof(user_list); i++) {
+  int user_list_len = (int)(sizeof(user_list) / sizeof(user_list[0]));
+
+  for (int i = 0; i < user_list_len; i++) {
     user *u = user_list[i];
 
     if (strcmp(username, u->username) && strcmp(password, u->password)) {
@@ -103,7 +107,7 @@ int main (int argc, char *argv[])
     }
 
     // Listen
-    if ((listen(server_fd, 20)) < 0) {
+    if ((listen(server_fd, CONCURRENT_CLIENT_COUNT_MAX)) < 0) {
         on_error("Could not listen on socket\n");
     }
 
@@ -228,7 +232,7 @@ void *handle_request(void *server_fd) {
     //Get the socket descriptor
     int client_fd = *(int*)server_fd;
     int read_size;
-    char *message , client_message[2000], username[2000], password[2000];
+    char *message , client_message[BUFFER_SIZE], username[BUFFER_SIZE], password[BUFFER_SIZE];
 
     message = "Type username:\n";
     write(client_fd , message , strlen(message));
@@ -256,9 +260,11 @@ void *handle_request(void *server_fd) {
     if (check_credentials(username, password) < 0) {
         printf("Credentials wrong.");
     }
+     
+    clients[0] = client_fd;
 
     //Receive a message from client
-    while( (read_size = recv(client_fd , client_message , 2000 , 0)) > 0 ) {
+    while ((read_size = recv(client_fd , client_message , 2000 , 0)) > 0 ) {
 
       // snprintf(
       //         log_message,
@@ -270,8 +276,14 @@ void *handle_request(void *server_fd) {
 
       // log_to_file(log_message);
 
-        //Send the message back to client
-        write(client_fd , client_message , strlen(client_message));
+        int clients_len = (int)(sizeof(clients) / sizeof(clients[0]));
+
+        for (int i = 0; i < clients_len; i++) {
+
+          //Send the message back to client
+          write(clients[i] , client_message , strlen(client_message));
+        }
+
     }
 
     if (read_size == 0) {
