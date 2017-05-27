@@ -1,4 +1,4 @@
-# Rechnersicherheit
+# Rechnersicherheit - SS17 - FU Berlin
 
 ## Gruppe:
 
@@ -14,15 +14,23 @@
 
 ## Assignment 5
 
+### Exercise 13 (Rainbow tables (3 Points)).
+
+![first-order Markov generator](img/13_rainbow_tables.png)
+
 ### Exercise 14 (x86 assembly recap (1+2 Points)).
+
+Das E als Pre x gibt an das es sich um eine Registergröÿe von 32-Bit handelt.##### ESP (Stack Pointer)Das Register zeigt auf die Spitze des Stacks.
+#####  EBP (Stack Base Pointer)Das Register zeigt auf den Boden des Stacks.
+#####  EIP (Instruction Pointer)Das Register speichert die Adresse der folgende CPU Anweisung es sei den Branching ist möglich.
 
 ### Exercise 15 (Common mistakes / lessons learned (4 Points)).
 
-objdump displays information from an object or program including functions and read-only data.
+`objdump` displays information from an object or program including functions and read-only data.
 
 
 ### Exercise 16 (Keeping your systems secure (Bonus: 1 Points)).
-
+not solved
 
 ## Assignment 3
 
