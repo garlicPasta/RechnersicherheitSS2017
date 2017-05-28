@@ -26,8 +26,25 @@ Das E als Pre x gibt an das es sich um eine Registergröÿe von 32-Bit handelt
 
 ### Exercise 15 (Common mistakes / lessons learned (4 Points)).
 
-`objdump` displays information from an object or program including functions and read-only data.
+We implemented the C-program and compiled it with `gcc` on our Debian machine.
 
+Running the program (`./a.out`) prompts the user with `Password:`
+
+Typing `password` as the password returns `Access Denied`.
+
+An example password, that does not start with "password" is "helloworld", actually any string that has at least 10 characters. The programm has the following line of code: `char buffer [9];`. There is not enough space in `buffer`, since one extra char is needed for the terminating null character which causes overflowing bytes get written over.
+
+```
+Password OK
+Segmentation fault
+```
+
+`objdump` displays information from an object or program including functions and read-only data. Option `-d` disassembles the data to make it more accessible.
+
+See the `objdump_output.txt` file.
+
+
+`gdb` (C debugger) was used to debug the c program: `gdb a.out`.
 
 ### Exercise 16 (Keeping your systems secure (Bonus: 1 Points)).
 not solved
