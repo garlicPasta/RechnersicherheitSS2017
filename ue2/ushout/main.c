@@ -12,8 +12,11 @@
 #define BUFFER_SIZE 1024
 #define BUFFER_LOG_CONNECTION_SIZE 130
 #define CONCURRENT_CLIENT_COUNT_MAX 20
-#define LOG_PATH "/var/log/ushoutd.log"
-#define PASS_PATH "/etc/ushoutd.passwd"
+#define MAX_USERS 100
+//#define LOG_PATH "/var/log/ushoutd.log"
+//#define PASS_PATH "/etc/ushoutd.passwd"
+#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
+#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
 #define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
 static FILE *logFile;
@@ -37,7 +40,7 @@ user *createUser(char *username, char *password) {
     return user;
 }
 
-static user *user_list[1];
+static user *user_list[MAX_USERS];
 static int clients[CONCURRENT_CLIENT_COUNT_MAX];
 
 void load_users(){
@@ -50,6 +53,7 @@ void load_users(){
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
+    int user_count=0;
     while ((read = getline(&line, &len, fp)) != -1) {
         char *token;
         char *user_data[2];
@@ -57,8 +61,9 @@ void load_users(){
         while ((token = strsep(&line, ":"))) {
             user_data[i++] = token;
         }
+        user_data[1][strcspn(user_data[1], "\n")] = 0;
         user *u = createUser(user_data[0], user_data[1]);
-        user_list[0] = u;
+        user_list[user_count++] = u;
     }
 
     fclose(fp);
@@ -193,7 +198,6 @@ void *handle_request(void *server_fd) {
     }
     username[strlen(username) - 1] = 0;
 
-    printf("\n%s", username);
 
     message = "Type password:\n";
     write(client_fd , message , strlen(message));
@@ -205,12 +209,12 @@ void *handle_request(void *server_fd) {
     }
     password[strlen(password) -1] = 0;
 
-    printf("\n%s", password);
-
     if (!check_credentials(username, password)) {
-        printf("Credentials wrong.");
+        printf("Credentials wrong.\n");
 
         // todo: remove thread
+    }else {
+        printf("%s logged in successfully\n", username);
     }
 
     clients[0] = client_fd;
