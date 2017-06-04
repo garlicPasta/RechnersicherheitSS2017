@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
         snprintf(
                 log_connect,
                 BUFFER_LOG_CONNECTION_SIZE,
-                "User with ip address %s connected to the server",
+                "Client with ip address %s connected to the server",
                 inet_ntoa(client.sin_addr)
         );
 
@@ -194,12 +194,9 @@ FILE * create_log_file() {
     return f;
 }
 
-void *handle_request(void *server_fd) {
 
-    //Get the socket descriptor
-    int client_fd = *(int*)server_fd;
-    int read_size;
-    char *message , client_message[BUFFER_SIZE], username[BUFFER_SIZE], password[BUFFER_SIZE];
+int user_prompt(int client_fd) {
+    char *message, username[BUFFER_SIZE], password[BUFFER_SIZE];
 
     message = "Type username:\n";
     write(client_fd , message , strlen(message));
@@ -223,10 +220,24 @@ void *handle_request(void *server_fd) {
 
     if (!check_credentials(username, password)) {
         printf("Credentials wrong.\n");
-
-        // todo: remove thread
-    }else {
+        // todo: remove thread or reprompt for login details
+        return 0;
+    } else {
         printf("%s logged in successfully\n", username);
+        return 1;
+    }
+}
+
+
+void *handle_request(void *server_fd) {
+
+    //Get the socket descriptor
+    int client_fd = *(int*)server_fd;
+    int read_size;
+    char client_message[BUFFER_SIZE];
+
+    while (!user_prompt(client_fd)) {
+        // user needs to log in successfully to continue
     }
 
     clients[0] = client_fd;
