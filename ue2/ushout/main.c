@@ -10,6 +10,7 @@
 #include <unistd.h>    //write
 
 #define BUFFER_SIZE 1024
+#define BUFFER_LOG_CONNECTION_SIZE 130
 #define CONCURRENT_CLIENT_COUNT_MAX 20
 #define LOG_PATH "/var/log/ushoutd.log"
 #define PASS_PATH "/etc/ushoutd.passwd"
@@ -73,12 +74,12 @@ int check_credentials(char *username, char *password) {
   for (int i = 0; i < user_list_len; i++) {
     user *u = user_list[i];
 
-    if (strcmp(username, u->username) && strcmp(password, u->password)) {
+    if (strcmp(username, u->username) == 0 && strcmp(password, u->password) == 0) {
       return 1;
     }
   }
 
-  return -1;
+  return 0;
 }
 
 int main (int argc, char *argv[])
@@ -114,8 +115,8 @@ int main (int argc, char *argv[])
     printf("Server is listening on %d\n", port);
     puts("Waiting for incoming connections...");
 
-    char *log_connect = (char*)calloc(130, sizeof(char));
-    char *log_message = (char*)calloc((BUFFER_SIZE + 130), sizeof(char));
+    char *log_connect = (char*)calloc(BUFFER_LOG_CONNECTION_SIZE, sizeof(char));
+    char *log_message = (char*)calloc((BUFFER_SIZE + BUFFER_LOG_CONNECTION_SIZE), sizeof(char));
 
     socklen_t client_len = sizeof(struct sockaddr_in);
     while ( (client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len)) ) {
@@ -131,7 +132,7 @@ int main (int argc, char *argv[])
 
         snprintf(
                 log_connect,
-                300,
+                BUFFER_LOG_CONNECTION_SIZE,
                 "User with ip address %s connected to the server",
                 inet_ntoa(client.sin_addr)
         );
@@ -206,8 +207,10 @@ void *handle_request(void *server_fd) {
 
     printf("\n%s", password);
 
-    if (check_credentials(username, password) < 0) {
+    if (!check_credentials(username, password)) {
         printf("Credentials wrong.");
+
+        // todo: remove thread
     }
 
     clients[0] = client_fd;
