@@ -13,14 +13,24 @@
 #define BUFFER_LOG_CONNECTION_SIZE 130
 #define CONCURRENT_CLIENT_COUNT_MAX 20
 #define MAX_USERS 100
+
+// Production:
 //#define LOG_PATH "/var/log/ushoutd.log"
 //#define PASS_PATH "/etc/ushoutd.passwd"
-#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
-#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
+
+// Debug Jakob:
+//#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
+//#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
+
+// Debug Ramdane:
+#define LOG_PATH "/Users/rs/Documents/Uni/SS17/Rechnersicherheit/ue/git-repo/ue2/ushout/ushoutd.log"
+#define PASS_PATH "/Users/rs/Documents/Uni/SS17/Rechnersicherheit/ue/git-repo/ue2/ushout/ushoutd.passwd"
+
 #define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
 static FILE *logFile;
 FILE * create_log_file(void);
+static int total_users_count;
 
 typedef struct {
     char *username;
@@ -53,6 +63,7 @@ void load_users(){
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
+    total_users_count = 0;
     int user_count=0;
     while ((read = getline(&line, &len, fp)) != -1) {
         char *token;
@@ -66,17 +77,18 @@ void load_users(){
         user_list[user_count++] = u;
     }
 
+    total_users_count = user_count;
+
     fclose(fp);
     if (line)
         free(line);
 
 }
 
+//TODO: improve inefficient user check
 int check_credentials(char *username, char *password) {
 
-  int user_list_len = (int)(sizeof(user_list) / sizeof(user_list[0]));
-
-  for (int i = 0; i < user_list_len; i++) {
+  for (int i = 0; i < total_users_count; i++) {
     user *u = user_list[i];
 
     if (strcmp(username, u->username) == 0 && strcmp(password, u->password) == 0) {
