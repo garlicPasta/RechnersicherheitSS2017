@@ -30,6 +30,7 @@
 
 static FILE *logFile;
 FILE * create_log_file(void);
+static int total_clients_count;
 static int total_users_count;
 
 typedef struct {
@@ -89,21 +90,23 @@ void load_users(){
 //TODO: improve inefficient user check
 int check_credentials(char *username, char *password) {
 
-  for (int i = 0; i < total_users_count; i++) {
-    user *u = user_list[i];
+    for (int i = 0; i < total_users_count; i++) {
+        user *u = user_list[i];
 
-    if (strcmp(username, u->username) == 0 && strcmp(password, u->password) == 0) {
-      return 1;
+        if (strcmp(username, u->username) == 0 && strcmp(password, u->password) == 0) {
+            return 1;
+        }
     }
-  }
 
-  return 0;
+    return 0;
 }
 
 int main (int argc, char *argv[])
 {
     logFile = create_log_file();
     load_users();
+
+    total_clients_count = 0;
 
     if (argc < 2) on_error("Usage: %s [port]\n", argv[0]);
     int port = atoi(argv[1]);
@@ -149,11 +152,11 @@ int main (int argc, char *argv[])
         }
 
         snprintf(
-                log_connect,
-                BUFFER_LOG_CONNECTION_SIZE,
-                "Client with ip address %s connected to the server",
-                inet_ntoa(client.sin_addr)
-        );
+                 log_connect,
+                 BUFFER_LOG_CONNECTION_SIZE,
+                 "Client with ip address %s connected to the server",
+                 inet_ntoa(client.sin_addr)
+                 );
 
         log_to_file(log_connect);
     }
@@ -200,30 +203,40 @@ int user_prompt(int client_fd) {
     char *message, username[BUFFER_SIZE], password[BUFFER_SIZE];
 
     message = "Type username:\n";
+
+user_prompt_username:
     write(client_fd , message , strlen(message));
 
     memset(username, 0, BUFFER_SIZE);
     if ((recv(client_fd, username, BUFFER_SIZE, 0)) < 0) {
-        return 0;
+        message = "Failed to read username, try again.\nType username:\n";
+        goto user_prompt_username;
     }
     username[strlen(username) - 1] = 0;
 
     message = "Type password:\n";
+
+user_prompt_password:
     write(client_fd , message , strlen(message));
 
     memset(password, 0, BUFFER_SIZE);
 
     if ((recv(client_fd, password, BUFFER_SIZE, 0)) < 0) {
-        return 0;
+        message = "Failed to read password, try again.\nType password:\n";
+        goto user_prompt_password;
     }
     password[strlen(password) -1] = 0;
 
     if (!check_credentials(username, password)) {
         printf("Credentials wrong.\n");
-        // todo: remove thread or reprompt for login details
-        return 0;
+        message = "Credentials wrong, try again.\nType username:\n";
+        goto user_prompt_username;
     } else {
         printf("%s logged in successfully\n", username);
+
+        message = "You logged in successfully.\nType in something.\n";
+        write(client_fd , message , strlen(message));
+        message = "\0";
         return 1;
     }
 }
@@ -242,42 +255,44 @@ void *handle_request(void *server_fd) {
 
     // User logged in successfully
 
-    clients[0] = client_fd;
+    clients[total_clients_count++] = client_fd;
 
     //Receive a message from client
     while ((read_size = recv(client_fd , client_message , 2000 , 0)) > 0 ) {
 
-      // snprintf(
-      //         log_message,
-      //         BUFFER_SIZE + 100,
-      //         "%s send message: %s",
-      //         inet_ntoa(client.sin_addr),
-      //         client_message
-      // );
+        // snprintf(
+        //         log_message,
+        //         BUFFER_SIZE + 100,
+        //         "%s send message: %s",
+        //         inet_ntoa(client.sin_addr),
+        //         client_message
+        // );
 
-      // log_to_file(log_message);
+        // log_to_file(log_message);
 
         int clients_len = (int)(sizeof(clients) / sizeof(clients[0]));
 
-        for (int i = 0; i < clients_len; i++) {
+        for (int i = 0; i < total_clients_count; i++) {
 
-          //Send the message back to client
-          write(clients[i] , client_message , strlen(client_message));
- 
-          memset(client_message, 0, strlen(client_message));
+            //Send the message back to client
+            write(clients[i] , client_message , strlen(client_message));
+
+            memset(client_message, 0, strlen(client_message));
         }
 
     }
-
+    
     if (read_size == 0) {
         puts("Client disconnected");
         fflush(stdout);
     } else if (read_size == -1) {
         perror("recv failed");
     }
-
+    
     //Free the socket pointer
     free(server_fd);
-
+    
+    total_clients_count--;
+    
     return 0;
 }
