@@ -114,8 +114,8 @@ int main (int argc, char *argv[])
     printf("Server is listening on %d\n", port);
     puts("Waiting for incoming connections...");
 
-    char *log_connect = (char*)malloc(130 * sizeof(char));
-    char *log_message = (char*)malloc((BUFFER_SIZE + 130) * sizeof(char));
+    char *log_connect = (char*)calloc(130, sizeof(char));
+    char *log_message = (char*)calloc((BUFFER_SIZE + 130), sizeof(char));
 
     socklen_t client_len = sizeof(struct sockaddr_in);
     while ( (client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len)) ) {
