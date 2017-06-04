@@ -263,6 +263,8 @@ void *handle_request(void *server_fd) {
 
           //Send the message back to client
           write(clients[i] , client_message , strlen(client_message));
+ 
+          memset(client_message, 0, strlen(client_message));
         }
 
     }
