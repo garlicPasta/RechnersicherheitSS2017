@@ -69,6 +69,7 @@ void load_users(){
         char *token;
         char *user_data[2];
         int i = 0;
+        //TODO: fix buffer overflow, if passwords has multiple ":"
         while ((token = strsep(&line, ":"))) {
             user_data[i++] = token;
         }
@@ -203,10 +204,9 @@ int user_prompt(int client_fd) {
 
     memset(username, 0, BUFFER_SIZE);
     if ((recv(client_fd, username, BUFFER_SIZE, 0)) < 0) {
-        on_error("Couldn't read username\n");
+        return 0;
     }
     username[strlen(username) - 1] = 0;
-
 
     message = "Type password:\n";
     write(client_fd , message , strlen(message));
@@ -214,7 +214,7 @@ int user_prompt(int client_fd) {
     memset(password, 0, BUFFER_SIZE);
 
     if ((recv(client_fd, password, BUFFER_SIZE, 0)) < 0) {
-        on_error("Couldn't read password\n");
+        return 0;
     }
     password[strlen(password) -1] = 0;
 
@@ -239,6 +239,8 @@ void *handle_request(void *server_fd) {
     while (!user_prompt(client_fd)) {
         // user needs to log in successfully to continue
     }
+
+    // User logged in successfully
 
     clients[0] = client_fd;
 
