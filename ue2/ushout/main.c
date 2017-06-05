@@ -15,16 +15,8 @@
 #define MAX_USERS 100
 
 // Production:
-//#define LOG_PATH "/var/log/ushoutd.log"
-//#define PASS_PATH "/etc/ushoutd.passwd"
-
-// Debug Jakob:
-//#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
-//#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
-
-// Debug Ramdane:
-#define LOG_PATH "/Users/rs/Documents/Uni/SS17/Rechnersicherheit/ue/git-repo/ue2/ushout/ushoutd.log"
-#define PASS_PATH "/Users/rs/Documents/Uni/SS17/Rechnersicherheit/ue/git-repo/ue2/ushout/ushoutd.passwd"
+#define LOG_PATH "/var/log/ushoutd.log"
+#define PASS_PATH "/etc/ushoutd.passwd"
 
 #define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
