@@ -12,6 +12,43 @@
 - [Philippe Cechslim: Making a faster cryptoanalytic time-memory trade-off](http://pages.csam.montclair.edu/~perrieror/projects/CMPT495-clustering.and.security/resources/philippe.oechslin-making.a.faster.cryptanalytical.time.memory.trade.off.pdf)
 - [Narayanan, Shmatrikov: Fast dictionary attacks on passwords using time-memory-trade-off]()
 
+## Assignment 6
+
+### Exercise 17 (Honeywords (3+2 Points)).
+
+![Honeywords](img/17_honeywords.png)
+
+### Exercise 18 (x86 assembly recap (2 Points)).
+
+See files.
+
+### Exercise 19 (Case study μ-shout (II): Secure C Coding (2 Points + 1 Bonus)).
+
+#### Part 1 Code:
+See files for code.
+
+#### Part 2 Notes:
+
+This is a summary of the fixed issues. Not all issues were fixed yet. We fix more issues as we go.
+
+![CurrentFixedIssues](img/19_fixed_issues_status.png) 
+
+Some of the variable names changed like `buf`. Also added more descriptive named constants. Still not an ideal solution. Password still need to be hashed. Variable accesses need to be synchronized. 
+
+Another point: we need to implement a dynamic array solution for adding and removing connected clients. The access for that array also will need to be synchronized.
+
+#### Part 3 Secure C Coding Rules:
+
+We decided to take a look at rule 6:
+[Rule 06. Arrays (ARR)](https://www.securecoding.cert.org/confluence/pages/viewpage.action?pageId=263) under [ARR32-C. Ensure size arguments for variable length arrays are in a valid range](https://www.securecoding.cert.org/confluence/display/c/ARR32-C.+Ensure+size+arguments+for+variable+length+arrays+are+in+a+valid+range).
+
+We ensure that the passed index (i.e. adding `connected_client` the `clients` array) is in valid range.
+
+We also decided to take a look at rule 48:
+[Rule 48. Miscellaneous (MSC)](https://www.securecoding.cert.org/confluence/pages/viewpage.action?pageId=362) under [MSC37-C. Ensure that control never reaches the end of a non-void function](https://www.securecoding.cert.org/confluence/display/c/MSC37-C.+Ensure+that+control+never+reaches+the+end+of+a+non-void+function). 
+
+In our `UShout` code all non void methods are returning a valid value in any case.
+
 ## Assignment 5
 
 ### Exercise 13 (Rainbow tables (3 Points)).
