@@ -241,12 +241,37 @@ user_prompt_password:
     }
 }
 
+int add_client(int client_fd) {
+    if (total_clients_count + 1 >= CONCURRENT_CLIENT_COUNT_MAX) {
+        // Handle error, position < 0 invalid or max. # of clients connected at the same time
+        return 0;
+    }
+
+    clients[total_clients_count++] = client_fd;
+
+    return 1;
+}
+
+int remove_client(int client_fd) {
+    for (int i = 0; i < total_clients_count; i++) {
+        int connected_client_fd = clients[i];
+
+        if (connected_client_fd == client_fd) {
+            clients[i] = 0;
+            total_clients_count--;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 
 void *handle_request(void *server_fd) {
 
     //Get the socket descriptor
     int client_fd = *(int*)server_fd;
-    int read_size;
+    int read_size = 0;
     char client_message[BUFFER_SIZE];
 
     while (!user_prompt(client_fd)) {
@@ -255,32 +280,36 @@ void *handle_request(void *server_fd) {
 
     // User logged in successfully
 
-    clients[total_clients_count++] = client_fd;
+    //    clients[total_clients_count++] = client_fd;
+    if (add_client(client_fd)) {
+        //Receive a message from client
+        while ((read_size = recv(client_fd , client_message , 2000 , 0)) > 0 ) {
 
-    //Receive a message from client
-    while ((read_size = recv(client_fd , client_message , 2000 , 0)) > 0 ) {
+            //TODO: Sync log file write
+            // snprintf(
+            //         log_message,
+            //         BUFFER_SIZE + 100,
+            //         "%s send message: %s",
+            //         inet_ntoa(client.sin_addr),
+            //         client_message
+            // );
 
-        // snprintf(
-        //         log_message,
-        //         BUFFER_SIZE + 100,
-        //         "%s send message: %s",
-        //         inet_ntoa(client.sin_addr),
-        //         client_message
-        // );
+            // log_to_file(log_message);
 
-        // log_to_file(log_message);
+            for (int i = 0; i < total_clients_count; i++) {
 
-        int clients_len = (int)(sizeof(clients) / sizeof(clients[0]));
+                //Send the message back to client
+                write(clients[i] , client_message , strlen(client_message));
 
-        for (int i = 0; i < total_clients_count; i++) {
-
-            //Send the message back to client
-            write(clients[i] , client_message , strlen(client_message));
-
-            memset(client_message, 0, strlen(client_message));
+                memset(client_message, 0, strlen(client_message));
+            }
         }
 
+    } else {
+        puts("Adding client failed.");
     }
+    
+    memset(client_message, 0, strlen(client_message));
     
     if (read_size == 0) {
         puts("Client disconnected");
@@ -289,10 +318,10 @@ void *handle_request(void *server_fd) {
         perror("recv failed");
     }
     
-    //Free the socket pointer
-    free(server_fd);
-    
-    total_clients_count--;
+    if (remove_client(client_fd)) {
+        //Free the socket pointer
+        free(server_fd);
+    }
     
     return 0;
 }
