@@ -15,8 +15,12 @@
 #define MAX_USERS 100
 
 // Production:
-#define LOG_PATH "/var/log/ushoutd.log"
-#define PASS_PATH "/etc/ushoutd.passwd"
+//#define LOG_PATH "/var/log/ushoutd.log"
+//#define PASS_PATH "/etc/ushoutd.passwd"
+
+// Debug(Jakob):
+#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
+#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
 
 #define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
@@ -196,39 +200,38 @@ int user_prompt(int client_fd) {
 
     message = "Type username:\n";
 
-user_prompt_username:
     write(client_fd , message , strlen(message));
 
     memset(username, 0, BUFFER_SIZE);
     if ((recv(client_fd, username, BUFFER_SIZE, 0)) < 0) {
-        message = "Failed to read username, try again.\nType username:\n";
-        goto user_prompt_username;
+        message = "Failed to read username, try again.\n";
+        write(client_fd , message , strlen(message));
+        return 0;
     }
     username[strlen(username) - 1] = 0;
 
     message = "Type password:\n";
 
-user_prompt_password:
     write(client_fd , message , strlen(message));
 
     memset(password, 0, BUFFER_SIZE);
 
     if ((recv(client_fd, password, BUFFER_SIZE, 0)) < 0) {
-        message = "Failed to read password, try again.\nType password:\n";
-        goto user_prompt_password;
+        message = "Failed to read password, try again.\n";
+        write(client_fd , message , strlen(message));
+        return  0;
     }
     password[strlen(password) -1] = 0;
 
     if (!check_credentials(username, password)) {
         printf("Credentials wrong.\n");
-        message = "Credentials wrong, try again.\nType username:\n";
-        goto user_prompt_username;
+        message = "Credentials wrong, try again.\n";
+        write(client_fd , message , strlen(message));
+        return  0;
     } else {
         printf("%s logged in successfully\n", username);
-
         message = "You logged in successfully.\nType in something.\n";
         write(client_fd , message , strlen(message));
-        message = "\0";
         return 1;
     }
 }
