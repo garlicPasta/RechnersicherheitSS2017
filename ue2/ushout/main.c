@@ -292,12 +292,10 @@ void *handle_request(void *server_fd) {
             // log_to_file(log_message);
 
             for (int i = 0; i < total_clients_count; i++) {
-
                 //Send the message back to client
                 write(clients[i] , client_message , strlen(client_message));
-
-                memset(client_message, 0, strlen(client_message));
             }
+            memset(client_message, 0, strlen(client_message));
         }
 
     } else {
