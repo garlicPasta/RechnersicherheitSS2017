@@ -17,6 +17,7 @@
 ### Exercise 21 (Real world access control matrix (3 Points)).
 
 
+
 ### Exercise 23 (More programming mistakes... (1+2+1 Points + 1 Bonus)).
 
 #### Part 1
@@ -38,6 +39,7 @@ On the stack you can find the stored registers `ebp` and `eip`. Also, the `buffe
 	
 #### Part 3
 
+On OpenBSD we got a segmentation fault (core dumped) with the same steps above (Part 2).
 
 ## Assignment 6
 
