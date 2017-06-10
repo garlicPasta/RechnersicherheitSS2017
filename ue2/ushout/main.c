@@ -13,14 +13,15 @@
 #define BUFFER_LOG_CONNECTION_SIZE 130
 #define CONCURRENT_CLIENT_COUNT_MAX 20
 #define MAX_USERS 100
+#define NON_LOGIN_USER_ID 1001
 
 // Production:
-//#define LOG_PATH "/var/log/ushoutd.log"
-//#define PASS_PATH "/etc/ushoutd.passwd"
+#define LOG_PATH "/var/log/ushoutd.log"
+#define PASS_PATH "/etc/ushoutd.passwd"
 
 // Debug(Jakob):
-#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
-#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
+//#define LOG_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.log"
+//#define PASS_PATH "/home/jakob/uni/rechnersicherheit/ue2/ushout/ushoutd.passwd"
 
 #define on_error(...) { printf("Error!"); fprintf(stderr, __VA_ARGS__); fflush(stderr); fclose(logFile); exit(1); }
 
@@ -101,6 +102,9 @@ int main (int argc, char *argv[])
 {
     logFile = create_log_file();
     load_users();
+
+    setuid(NON_LOGIN_USER_ID);
+    seteuid(NON_LOGIN_USER_ID);
 
     total_clients_count = 0;
 
