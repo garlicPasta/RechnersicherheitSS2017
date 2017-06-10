@@ -12,6 +12,33 @@
 - [Philippe Cechslim: Making a faster cryptoanalytic time-memory trade-off](http://pages.csam.montclair.edu/~perrieror/projects/CMPT495-clustering.and.security/resources/philippe.oechslin-making.a.faster.cryptanalytical.time.memory.trade.off.pdf)
 - [Narayanan, Shmatrikov: Fast dictionary attacks on passwords using time-memory-trade-off]()
 
+## Assignment 7
+
+### Exercise 21 (Real world access control matrix (3 Points)).
+
+
+### Exercise 23 (More programming mistakes... (1+2+1 Points + 1 Bonus)).
+
+#### Part 1
+On the stack you can find the stored registers `ebp` and `eip`. Also, the `buffer[]` is on the stack (run `info locals` in gdb).
+
+
+#### Part 2
+1. compiled `main.c` with `-g` flag
+2. looked for the return address (saved eip) of the `pwCheck` function which we found on the stack
+	1. firstly, we started with `gdb ./a.out`
+	2. we set a breakpoint at line 15 (`return 0;`)
+	3. continued with `run`
+	4. Displayed stack info with `info frame` at the breakpoint for getting the address of the stored `eip`
+	5. 	then we looked for the address of `buffer[]`
+	6. we counted the memory distance between `buffer` and the stored `eip` 
+	7. produce a buffer overflow to overwrite the stored eip
+	8. Instead of jumping back into the main the program now jumps to the `doAccept()` function
+8. Result: in our case on our Debian machine the password that worked was: ```printf "seventeencharssss\x5b\x84\x04\x08" | ./a.out```. The address was `0x804845b` which we found with `layout split` where the `doAccept()` function begins.
+	
+#### Part 3
+
+
 ## Assignment 6
 
 ### Exercise 17 (Honeywords (3+2 Points)).
