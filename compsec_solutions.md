@@ -16,7 +16,11 @@
 
 ### Exercise 21 (Real world access control matrix (3 Points)).
 
+![Access Control Matrix](img/21_access_control_matrix.png) 
 
+### Exercise 22 (Case study μ-shout (iv): Privilege Dropping (3 Points)).
+
+see code, beginning of main
 
 ### Exercise 23 (More programming mistakes... (1+2+1 Points + 1 Bonus)).
 
