@@ -2,15 +2,152 @@
 
 ## Gruppe:
 
-- Jakob Krause, Master Informatik, 4573260
-- Ramdane Sennoun, Master Informatik, 4304440
-
+- Jakob, Master Informatik, 4573260
+- Ramdane, Master Informatik, 4304440
 
 ## Papers
 - [OMEN: Faster Password Guessing Using an Ordered Markov Enumerator](https://hal.inria.fr/hal-01112124/document)
 - [Martin Hellman: A cryptoanalytic time-memory trade-off)](http://www.karlin.mff.cuni.cz/~hojsik/ku/papers/Hellman_ACryptanalyticTime-MemoryTradeoff_1980.pdf)
 - [Philippe Cechslim: Making a faster cryptoanalytic time-memory trade-off](http://pages.csam.montclair.edu/~perrieror/projects/CMPT495-clustering.and.security/resources/philippe.oechslin-making.a.faster.cryptanalytical.time.memory.trade.off.pdf)
 - [Narayanan, Shmatrikov: Fast dictionary attacks on passwords using time-memory-trade-off]()
+
+
+## Assignment 10
+
+### Exercise 33 (Take-Grant protection model: Safety (2+1+3 Points)).
+
+#### 1. Give a sequence of rule applications showing can.share(R,z,p,G0) is true.
+```
+s' takes R from s
+s' grants R to y
+y takes (x,w)=g from x
+y grants R to x
+x grants R to w
+p creates tg for new object OBJ
+u takes g from v
+u grants (v, w) to p
+p grants (p, OBJ) to w
+w grants R to OBJ
+p takes R from OBJ
+```
+#### 2. Is can.share(t, s′, p, G0) true? Why or why not?
+
+can.share(t, s′, p, G0) is true if p is a subject and
+
+1. there exists a subject s in G0 such that t is element of (s, s′) in G0 an
+2. s and p are directly tg-connected.
+
+can.share(t, s′, p, G0) is not true because s and p are not directly tg-connected.
+#### 3. Show can.steal(R, z, p, G0) is true and list the conspirators.
+
+can.steal(R, z, p, G0) is true if and only if 
+
+1. there is a subject p' such that p' = p (if p is a subject which is the case) or p' initially spans to p (if p is an object) and
+2. There is a node s such that R is element of (s, z) in G0 and can.share(t,s,p',G0) is true, i.e. p' can require the right to take from s.
+
+conspirators are subjects that participate in stealing. These are the consipirators:
+
+- u
+- w 
+
+
+### Exercise 34 (Hardening μ-shoutd (3 Points)).
+
+### Exercise 35 (Even more Hello World (1 Points)).
+
+### Exercise 36 (Keeping your systems secure (Bonus: 1 Points)).
+##### Debian
+Since June 24thth, 11.59pm there were 4 debian security announcemenets as of this writing.
+
+- [SECURITY] [DSA 3898-1] expat security update Salvatore Bonaccorso
+- [SECURITY] [DSA 3899-1] vlc security update Salvatore Bonaccorso
+- [SECURITY] [DSA 3886-2] linux regression update Salvatore Bonaccorso
+- [SECURITY] [DSA 3900-1] openvpn security update Sebastien Delafond
+
+The list was extracted from [https://lists.debian.org/debian-security-announce/2017/threads.html](https://lists.debian.org/debian-security-announce/2017/threads.html)
+
+###### [SECURITY] [DSA 3900-1] openvpn security update Sebastien Delafond
+Several issues were discovered in openvpn, a virtual private network application. It was discovered that openvpn did not properly handle the rollover of packet identifiers. This would allow an authenticated remote attacker to cause a denial-of-service via application crash.
+
+Also, openvpn did not properly handle specific malformed IPv6 packets. This would allow a remote attacker to cause a denial-of-service via application crash.
+
+Furthermore openvpn did not properly handle clients connecting to an HTTP proxy with NTLMv2 authentication. This would allow a remote attacker to cause a denial-of-service via application crash, or potentially leak sensitive information like the user's proxy password.
+
+Openvpn did not properly handle some x509 extensions. This would allow a remote attacker to cause a denial-of-service via application crash.
+
+They recommend to upgrade your openvpn packages.
+
+More information on who discovered it and the versions these problems were fixed for can be found here: 
+[https://lists.debian.org/debian-security-announce/2017/msg00161.html](https://lists.debian.org/debian-security-announce/2017/msg00161.html)
+
+    
+#### OpenBSD
+
+Since June 24thth, 11.59pm there was 1 OpenBSD 6.1 security announcemenets as of this writing.
+
+- 013: RELIABILITY FIX: June 27, 2017   
+
+All architectures 
+When pinging an IPv6 link-local address, the reflected packet had ::1 as source address. The echo reply was ignored as it must be from the link-local address. 
+A source code patch exists which remedies this problem.
+
+The list was extracted from [https://www.openbsd.org/errata61.html](https://www.openbsd.org/errata61.html)
+
+
+## Assignment 9
+
+### Exercise 29 (Chinese wall and Bell-La Padula model (4 Points)).
+
+![Chinese Wall](img/29_chinese_wall.png)
+
+### Exercise 30 (Undecidability of the general halting problem (4 points)).
+
+#### Commands
+
+```
+command C_{qX}(s, s’)
+	if q in (s, s) and X in (s, s)
+		and `own’ in (s, s’)
+	then 
+		delete q from (s, s)
+		delete X from (s, s)
+		enter Y into (s, s)
+		enter p into (s’, s’)
+end
+```
+
+```
+command C_{qX}(s, s’)
+	if q in (s, s) and X in (s, s)
+		and `end’ in (s, s)
+	then 
+		delete q from (s, s) 		delete X from (s, s)
+		enter Y into (s, s)
+		create subject s’ 			enter `own’ into (s, s’)
+		enter p into (s’, s’) 		enter B into (s’, s’)
+		delete end from (s, s) 		enter ‘end’ into (s’, s’)
+end
+```
+
+#### Matrix
+
+![Matrix](img/30_matrix.png)
+
+### Exercise 31 (More Hello World (1+2 Points)).
+
+Aus dem kompilierten Hello World Programm in Assembler nimmt man die .text Section. Man setzt den Pointer auf den eigentlichen Hello World String im Code.
+
+```
+printf '\xba\x0c\x00\x00\x00\xb9\x40\x85\x04\x08\xbb\x01\x00\x00\x00\xb8\x04\x00\x00\x00\xcd\x80\xbb\x00\x00\x00\x00\xb8\x01\x00\x00\x00\xcd\x80'
+``` 
+erzeugt das geforderte Ergebnis.
+
+### Exercise 32 (Keeping your systems secure (Bonus: 1 Points)).
+
+
+## Assignment 8
+
+...
 
 ## Assignment 7
 
