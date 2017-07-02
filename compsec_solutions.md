@@ -53,7 +53,11 @@ conspirators are subjects that participate in stealing. These are the consipirat
 
 ### Exercise 34 (Hardening μ-shoutd (3 Points)).
 
+siehe ushoutd
+
 ### Exercise 35 (Even more Hello World (1 Points)).
+
+not solved
 
 ### Exercise 36 (Keeping your systems secure (Bonus: 1 Points)).
 ##### Debian
